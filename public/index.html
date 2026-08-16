@@ -49,14 +49,18 @@
         <!-- Generator Section -->
         <div class="my-6 bg-slate-900/50 border border-slate-800/80 p-6 rounded-xl">
             <h2 class="text-sm font-semibold uppercase tracking-wider text-indigo-400 mb-4 font-mono">Generate New License Key</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Client / App Name</label>
-                    <input type="text" id="keyName" placeholder="e.g. Araf_VIP_Client" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                    <input type="text" id="keyName" placeholder="e.g. Araf_VIP" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Duration (Days)</label>
                     <input type="number" id="durationDays" value="30" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Max Devices</label>
+                    <input type="number" id="maxDevices" value="1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
                 </div>
                 <div class="flex items-end">
                     <button onclick="generateKey()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/20 text-sm">Generate Key</button>
@@ -76,6 +80,7 @@
                     <tr>
                         <th class="p-4">Target Name</th>
                         <th class="p-4">License Key String</th>
+                        <th class="p-4">Devices Used</th>
                         <th class="p-4">Expiry Date</th>
                         <th class="p-4">Status</th>
                         <th class="p-4 text-right">Actions</th>
@@ -144,7 +149,7 @@
             tbody.innerHTML = '';
 
             if(keys.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500 font-mono text-xs">No active keys generated yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 font-mono text-xs">No active keys generated yet.</td></tr>`;
                 return;
             }
 
@@ -158,6 +163,7 @@
                     <tr class="hover:bg-slate-900/40 transition-all">
                         <td class="p-4 font-semibold text-white">${k.name}</td>
                         <td class="p-4 font-mono text-indigo-400 tracking-wider">${k.key}</td>
+                        <td class="p-4 font-mono text-xs text-slate-300">${k.devices.length} / ${k.maxDevices} Devices</td>
                         <td class="p-4 font-mono text-xs text-slate-400">${new Date(k.expiresAt).toLocaleDateString()}</td>
                         <td class="p-4">${statusBadge}</td>
                         <td class="p-4 text-right">
@@ -173,11 +179,12 @@
             const password = localStorage.getItem('nexus_admin_pass');
             const name = document.getElementById('keyName').value;
             const durationDays = document.getElementById('durationDays').value;
+            const maxDevices = document.getElementById('maxDevices').value;
 
             const res = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, durationDays, password })
+                body: JSON.stringify({ name, durationDays, maxDevices, password })
             });
 
             const result = await res.json();
