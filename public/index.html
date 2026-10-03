@@ -1,207 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexusGuard // Enterprise License Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .glow:focus { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>NexusGuard // License Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/vendor/supabase.js" defer></script>
+  <script src="/js/ui.js" defer></script>
+  <script src="/js/licenses.js" defer></script>
+  <script src="/js/apps.js" defer></script>
+  <script src="/js/app.js" defer></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 md:p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+  <noscript><p class="p-6 text-center text-rose-400">JavaScript is required for the admin dashboard.</p></noscript>
 
-    <!-- Login Matrix View -->
-    <div id="loginBox" class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl transition-all duration-500">
-        <div class="flex items-center justify-center mb-6">
-            <div class="h-12 w-12 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold text-xl shadow-inner">⚡</div>
+  <!-- ================= AUTH ================= -->
+  <div id="authView" class="min-h-screen flex items-center justify-center p-4">
+    <div class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl">
+      <div class="flex justify-center mb-6">
+        <div class="h-12 w-12 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold text-xl shadow-inner">⚡</div>
+      </div>
+      <h1 class="text-2xl font-bold text-center tracking-tight text-white mb-2">NexusGuard Terminal</h1>
+      <p id="authSubtitle" class="text-xs text-slate-400 text-center mb-6 uppercase tracking-widest font-mono">Secure Authorization Required</p>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label for="loginEmail" class="nx-label-strong">Admin Email</label>
+          <input id="loginEmail" type="email" required autocomplete="username" maxlength="254" class="nx-input-lg glow">
         </div>
-        <h1 class="text-2xl font-bold text-center tracking-tight text-white mb-2">NexusGuard Terminal</h1>
-        <p class="text-xs text-slate-400 text-center mb-6 uppercase tracking-widest font-mono">Secure Authorization Required</p>
-        
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Master Password</label>
-                <input type="password" id="adminPassword" placeholder="••••••••••••••••" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 glow transition-all">
-            </div>
-            <button onclick="adminLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/30 text-sm tracking-wide">Initialize Session</button>
-            <p id="loginError" class="text-rose-400 text-xs text-center mt-2 font-medium hidden">Access Denied: Invalid Credentials</p>
+        <div>
+          <label for="loginPassword" class="nx-label-strong">Password</label>
+          <input id="loginPassword" type="password" required autocomplete="current-password" maxlength="200" placeholder="••••••••••••••••" class="nx-input-lg glow">
         </div>
+        <button id="loginSubmit" type="submit" class="nx-btn w-full py-3 tracking-wide">Initialize Session</button>
+        <button id="showForgot" type="button" class="w-full text-xs text-slate-400 hover:text-indigo-300 transition-all">Forgot password?</button>
+      </form>
+
+      <form id="forgotForm" class="space-y-4 hidden">
+        <div>
+          <label for="forgotEmail" class="nx-label-strong">Admin Email</label>
+          <input id="forgotEmail" type="email" required autocomplete="username" maxlength="254" class="nx-input-lg glow">
+        </div>
+        <button id="forgotSubmit" type="submit" class="nx-btn w-full py-3">Send Reset Link</button>
+        <button id="backToLogin" type="button" class="w-full text-xs text-slate-400 hover:text-indigo-300 transition-all">← Back to sign in</button>
+      </form>
+
+      <form id="newPasswordForm" class="space-y-4 hidden">
+        <div>
+          <label for="newPassword" class="nx-label-strong">New Password (min 10 chars)</label>
+          <input id="newPassword" type="password" required minlength="10" maxlength="200" autocomplete="new-password" class="nx-input-lg glow">
+        </div>
+        <div>
+          <label for="newPassword2" class="nx-label-strong">Confirm Password</label>
+          <input id="newPassword2" type="password" required minlength="10" maxlength="200" autocomplete="new-password" class="nx-input-lg glow">
+        </div>
+        <button id="newPasswordSubmit" type="submit" class="nx-btn w-full py-3">Update Password</button>
+      </form>
+
+      <p id="authMessage" class="hidden text-xs text-center mt-4 font-medium" role="alert"></p>
     </div>
+  </div>
 
-    <!-- Main Dashboard View -->
-    <div id="dashboardBox" class="w-full max-w-6xl glass p-6 md:p-8 rounded-2xl shadow-2xl hidden transition-all duration-500">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b border-slate-800/80 gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="h-10 w-10 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold text-lg">⚡</div>
-                <div>
-                    <h1 class="text-xl font-bold text-white tracking-tight">License Command Center</h1>
-                    <p class="text-xs text-slate-400 font-mono">Environment: Render Cloud // Node-Engine</p>
-                </div>
-            </div>
-            <button onclick="logout()" class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 px-4 py-2 rounded-xl text-xs font-semibold transition-all">Terminate Session</button>
+  <!-- ================= DASHBOARD ================= -->
+  <div id="dashboardView" class="hidden p-4 md:p-8">
+    <div class="w-full max-w-6xl mx-auto glass p-6 md:p-8 rounded-2xl shadow-2xl">
+
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b border-slate-800/80 gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="h-10 w-10 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold text-lg">⚡</div>
+          <div>
+            <h1 class="text-xl font-bold text-white tracking-tight">License Command Center</h1>
+            <p class="text-xs text-slate-400 font-mono"><span id="adminEmail">—</span> // <span id="adminRole" class="text-indigo-400">admin</span></p>
+          </div>
+        </div>
+        <button id="logoutBtn" type="button" class="nx-btn-danger px-4 py-2 rounded-xl font-semibold">Terminate Session</button>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 my-6">
+        <div class="nx-stat"><p class="nx-stat-label">Total</p><p data-stat="total" class="text-xl font-bold text-white">–</p></div>
+        <div class="nx-stat"><p class="nx-stat-label">Active</p><p data-stat="active" class="text-xl font-bold text-emerald-400">–</p></div>
+        <div class="nx-stat"><p class="nx-stat-label">Expired</p><p data-stat="expired" class="text-xl font-bold text-rose-400">–</p></div>
+        <div class="nx-stat"><p class="nx-stat-label">Suspended</p><p data-stat="suspended" class="text-xl font-bold text-amber-400">–</p></div>
+        <div class="nx-stat"><p class="nx-stat-label">Revoked</p><p data-stat="revoked" class="text-xl font-bold text-slate-400">–</p></div>
+        <div class="nx-stat"><p class="nx-stat-label">Devices</p><p data-stat="activeDevices" class="text-xl font-bold text-indigo-400">–</p></div>
+        <div class="nx-stat"><p class="nx-stat-label">Apps</p><p data-stat="apps" class="text-xl font-bold text-indigo-400">–</p></div>
+      </div>
+
+      <div class="flex gap-2 overflow-x-auto mb-6" role="tablist">
+        <button type="button" class="nx-tab" data-tab="licenses" role="tab" aria-selected="true">Licenses</button>
+        <button type="button" class="nx-tab" data-tab="apps" role="tab" aria-selected="false">Applications</button>
+        <button type="button" class="nx-tab" data-tab="audit" role="tab" aria-selected="false">Audit Log</button>
+      </div>
+
+      <!-- ===== LICENSES ===== -->
+      <section data-panel="licenses">
+        <form id="generatorForm" class="nx-card p-6 mb-6">
+          <h2 class="nx-title">Generate New License Key</h2>
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div><label for="genApp" class="nx-label">Application</label><select id="genApp" class="nx-input"></select></div>
+            <div><label for="genLabel" class="nx-label">Customer / Label</label><input id="genLabel" type="text" maxlength="120" placeholder="e.g. Araf_VIP" class="nx-input"></div>
+            <div><label for="genDuration" class="nx-label">Duration (Days)</label><input id="genDuration" type="number" min="1" value="30" class="nx-input"></div>
+            <div><label for="genDevices" class="nx-label">Max Devices</label><input id="genDevices" type="number" min="1" value="1" class="nx-input"></div>
+            <div class="flex items-end"><button id="genSubmit" type="submit" class="nx-btn w-full">Generate Key</button></div>
+          </div>
+          <label id="genLifetimeWrap" class="hidden mt-3 items-center gap-2 text-xs text-slate-300">
+            <input id="genLifetime" type="checkbox" class="accent-indigo-500"> Lifetime license (never expires)
+          </label>
+        </form>
+
+        <div class="flex flex-col md:flex-row gap-3 mb-3">
+          <input id="licSearch" type="search" maxlength="100" placeholder="Search label, or paste a full key…" class="nx-input md:flex-1">
+          <select id="licStatus" class="nx-input md:w-44">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+            <option value="suspended">Suspended</option>
+            <option value="revoked">Revoked</option>
+          </select>
+          <select id="licAppFilter" class="nx-input md:w-52"></select>
+          <button id="licRefresh" type="button" class="nx-btn-ghost px-4">Refresh</button>
         </div>
 
-        <!-- Generator Section -->
-        <div class="my-6 bg-slate-900/50 border border-slate-800/80 p-6 rounded-xl">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-indigo-400 mb-4 font-mono">Generate New License Key</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Client / App Name</label>
-                    <input type="text" id="keyName" placeholder="e.g. Araf_VIP" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Duration (Days)</label>
-                    <input type="number" id="durationDays" value="30" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Max Devices</label>
-                    <input type="number" id="maxDevices" value="1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
-                </div>
-                <div class="flex items-end">
-                    <button onclick="generateKey()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/20 text-sm">Generate Key</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Keys Table Section -->
         <div class="flex justify-between items-center mb-3">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono">Active Database Keys</h2>
-            <span id="keyCount" class="text-xs font-mono bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-indigo-400">Total: 0</span>
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 font-mono">License Database</h2>
+          <span id="licCount" class="text-xs font-mono bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-indigo-400">Total: 0</span>
         </div>
-        
-        <div class="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-900/30">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-900/80 text-slate-400 text-xs uppercase font-mono tracking-wider border-b border-slate-800">
-                    <tr>
-                        <th class="p-4">Target Name</th>
-                        <th class="p-4">License Key String</th>
-                        <th class="p-4">Devices Used</th>
-                        <th class="p-4">Expiry Date</th>
-                        <th class="p-4">Status</th>
-                        <th class="p-4 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="keyTableBody" class="divide-y divide-slate-800/60 text-slate-300">
-                    <!-- Dynamic Rows Here -->
-                </tbody>
-            </table>
+        <div class="nx-table-wrap">
+          <table class="nx-table">
+            <thead class="nx-thead"><tr>
+              <th class="p-4">Label</th><th class="p-4">Key</th><th class="p-4">App</th><th class="p-4">Devices</th>
+              <th class="p-4">Expiry</th><th class="p-4">Status</th><th class="p-4 text-right">Actions</th>
+            </tr></thead>
+            <tbody id="licTableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+          </table>
         </div>
+        <div id="licPager" class="flex items-center justify-between mt-4"></div>
+      </section>
+
+      <!-- ===== APPLICATIONS ===== -->
+      <section data-panel="apps" class="hidden">
+        <form id="appForm" class="nx-card p-6 mb-6">
+          <h2 class="nx-title">Register New Application</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div><label for="appName" class="nx-label">Application Name</label><input id="appName" type="text" required maxlength="80" placeholder="e.g. My Private Website" class="nx-input"></div>
+            <div class="md:col-span-2"><label for="appDesc" class="nx-label">Description (optional)</label><input id="appDesc" type="text" maxlength="500" class="nx-input"></div>
+            <div><label for="appDefDays" class="nx-label">Default Duration (Days)</label><input id="appDefDays" type="number" min="1" max="3650" value="30" class="nx-input"></div>
+            <div><label for="appDefDevices" class="nx-label">Default Max Devices</label><input id="appDefDevices" type="number" min="1" max="100" value="1" class="nx-input"></div>
+            <div><label for="appCap" class="nx-label">Device Cap (per license)</label><input id="appCap" type="number" min="1" max="100" value="10" class="nx-input"></div>
+            <div><label for="appMaxDays" class="nx-label">Max Duration (Days)</label><input id="appMaxDays" type="number" min="1" max="36500" value="3650" class="nx-input"></div>
+            <label class="flex items-center gap-2 text-xs text-slate-300 md:pt-6"><input id="appLifetime" type="checkbox" class="accent-indigo-500"> Allow lifetime licenses</label>
+            <div class="flex items-end"><button id="appSubmit" type="submit" class="nx-btn w-full">Create Application</button></div>
+          </div>
+        </form>
+
+        <div class="flex gap-3 mb-3">
+          <input id="appSearch" type="search" maxlength="80" placeholder="Search applications…" class="nx-input">
+        </div>
+        <div class="nx-table-wrap">
+          <table class="nx-table">
+            <thead class="nx-thead"><tr>
+              <th class="p-4">Application</th><th class="p-4">Client ID</th><th class="p-4">Policy</th>
+              <th class="p-4">Secret</th><th class="p-4">Status</th><th class="p-4 text-right">Actions</th>
+            </tr></thead>
+            <tbody id="appTableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== AUDIT LOG ===== -->
+      <section data-panel="audit" class="hidden">
+        <div class="flex flex-col md:flex-row gap-3 mb-3">
+          <select id="auditType" class="nx-input md:w-64">
+            <option value="">All events</option>
+            <option value="admin">Admin (login, denied)</option>
+            <option value="license">License events</option>
+            <option value="device">Device events</option>
+            <option value="app">Application events</option>
+            <option value="client">Client auth failures</option>
+          </select>
+          <button id="auditRefresh" type="button" class="nx-btn-ghost px-4">Refresh</button>
+        </div>
+        <div class="nx-table-wrap">
+          <table class="nx-table">
+            <thead class="nx-thead"><tr>
+              <th class="p-3">Time</th><th class="p-3">Event</th><th class="p-3">Actor</th><th class="p-3">Target</th><th class="p-3">Details</th>
+            </tr></thead>
+            <tbody id="auditTableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+          </table>
+        </div>
+        <div id="auditPager" class="flex items-center justify-between mt-4"></div>
+      </section>
+
     </div>
+  </div>
 
-    <script>
-        const storedPassword = localStorage.getItem('nexus_admin_pass');
-        if (storedPassword) verifyStoredPassword(storedPassword);
-
-        async function adminLogin() {
-            const password = document.getElementById('adminPassword').value;
-            const res = await fetch('/api/admin-login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                localStorage.setItem('nexus_admin_pass', password);
-                showDashboard();
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-            }
-        }
-
-        async function verifyStoredPassword(password) {
-            const res = await fetch('/api/admin-login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            });
-            const data = await res.json();
-            if (data.success) showDashboard();
-            else localStorage.removeItem('nexus_admin_pass');
-        }
-
-        function showDashboard() {
-            document.getElementById('loginBox').classList.add('hidden');
-            document.getElementById('dashboardBox').classList.remove('hidden');
-            fetchKeys();
-        }
-
-        function logout() {
-            localStorage.removeItem('nexus_admin_pass');
-            location.reload();
-        }
-
-        async function fetchKeys() {
-            const password = localStorage.getItem('nexus_admin_pass');
-            const res = await fetch('/api/keys', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            });
-            const keys = await res.json();
-            const tbody = document.getElementById('keyTableBody');
-            document.getElementById('keyCount').innerText = `Total: ${keys.length}`;
-            tbody.innerHTML = '';
-
-            if(keys.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 font-mono text-xs">No active keys generated yet.</td></tr>`;
-                return;
-            }
-
-            keys.forEach(k => {
-                const isExpired = new Date() > new Date(k.expiresAt);
-                const statusBadge = isExpired 
-                    ? `<span class="px-2 py-0.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded text-xs font-mono">Expired</span>`
-                    : `<span class="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded text-xs font-mono">Active</span>`;
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-900/40 transition-all">
-                        <td class="p-4 font-semibold text-white">${k.name}</td>
-                        <td class="p-4 font-mono text-indigo-400 tracking-wider">${k.key}</td>
-                        <td class="p-4 font-mono text-xs text-slate-300">${k.devices.length} / ${k.maxDevices} Devices</td>
-                        <td class="p-4 font-mono text-xs text-slate-400">${new Date(k.expiresAt).toLocaleDateString()}</td>
-                        <td class="p-4">${statusBadge}</td>
-                        <td class="p-4 text-right">
-                            <button onclick="navigator.clipboard.writeText('${k.key}'); alert('Key Copied!');" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium mr-2 transition-all">Copy</button>
-                            <button onclick="deleteKey('${k.id}')" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">Revoke</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function generateKey() {
-            const password = localStorage.getItem('nexus_admin_pass');
-            const name = document.getElementById('keyName').value;
-            const durationDays = document.getElementById('durationDays').value;
-            const maxDevices = document.getElementById('maxDevices').value;
-
-            const res = await fetch('/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, durationDays, maxDevices, password })
-            });
-
-            const result = await res.json();
-            if (result.success) {
-                document.getElementById('keyName').value = '';
-                fetchKeys();
-            } else {
-                alert('Generation failed: Unauthorized');
-            }
-        }
-
-        async function deleteKey(id) {
-            if (confirm('Are you sure you want to revoke this license key?')) {
-                await fetch(`/api/key/${id}`, { method: 'DELETE' });
-                fetchKeys();
-            }
-        }
-    </script>
+  <div id="modalRoot" class="hidden"></div>
+  <div id="toastRoot" class="fixed bottom-4 left-4 right-4 md:left-auto z-50 flex flex-col gap-2 items-end" aria-live="polite"></div>
 </body>
 </html>
