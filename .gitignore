@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+keys.json
+public/css/app.css
+coverage/
+npm-debug.log*
+.DS_Store
